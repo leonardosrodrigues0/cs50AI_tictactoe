@@ -6,14 +6,13 @@ from copy import deepcopy
 
 X = "X"
 O = "O"
-EMPTY = None
+E = EMPTY = None
 
 
-class FutureBoard():
-    def __init__(self, board, parent, action):
-        self.board = board
-        self.parent = parent
+class BoardNode():
+    def __init__(self, action, value):
         self.action = action
+        self.value = value
 
 
 def initial_state():
@@ -76,23 +75,23 @@ def winner(board):
     # Horizontal check
     for row in board:
         win = row[0]
-        if row[1] == win and row[2] == win:
+        if row[1] == win and row[2] == win and win:
             return win
 
     # Vertical check
     for j in range(3):
         win = board[0][j]
-        if board[1][j] == win and board[2][j] == win:
+        if board[1][j] == win and board[2][j] == win and win:
             return win
 
     # Main diagonal check
     win = board[0][0]
-    if board[1][1] == win and board[2][2] == win:
+    if board[1][1] == win and board[2][2] == win and win:
         return win
 
     # Secondary diagonal check
     win = board[0][2]
-    if board[1][1] == win and board[2][0] == win:
+    if board[1][1] == win and board[2][0] == win and win:
         return win
 
     return None
@@ -129,22 +128,31 @@ def utility(board):
     return 0
 
 
+def recursive(board):
+    """
+    Recursive function that takes a board and returns the
+    node with the best action and its utility.
+    """
+    if terminal(board):
+        return BoardNode(None, utility(board))
+
+    # k factor to differentiate players
+    k = 1 if player(board) == O else -1
+
+    minimax_node = BoardNode(None, k * 2)
+
+    for action in actions(board):
+        node = recursive(result(board, action))
+
+        if k * node.value < k * minimax_node.value:
+            minimax_node.value = node.value
+            minimax_node.action = action
+
+    return minimax_node
+
+
 def minimax(board):
     """
     Returns the optimal action for the current player on the board.
     """
-    # if terminal(board):
-    #     return None
-
-    # play = player(board)
-    # if play == X:
-    #     maxi = -2
-
-    #     for action in actions(board):
-    #         new_board = result(board, action)
-    #         value = minimax(new_board)
-
-    #         if value > maxi:
-    #             maxi = value
-
-    # TODO
+    return recursive(board).action
